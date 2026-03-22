@@ -66,4 +66,4 @@ fretpractice/
 
 fretpractice@mobrio.studio
 
-Built by Rivu Chakraborty · A Mobrio Studio product
+Built by Arpan Sinha · A Mobrio Studio product
