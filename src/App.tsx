@@ -1259,7 +1259,7 @@ function Footer() {
       </div>
 
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1100, margin: '0 auto', flexWrap: 'wrap', gap: 14 }}>
-        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.22)' }}>© 2025 FretPractice · A Mobrio Studio product · Built by Rivu Chakraborty</span>
+        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.22)' }}>© 2025 FretPractice · A Mobrio Studio product · Built by Team FretPractice</span>
         <div style={{ display: 'flex', gap: 20 }}>
           <FLink href="#">Privacy</FLink>
           <FLink href="#">Terms</FLink>
