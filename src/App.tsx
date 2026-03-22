@@ -373,7 +373,7 @@ function Nav() {
         <img
           src={LOGO_SRC}
           alt="FretPractice logo"
-          style={{ width: 28, height: 28, objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(37,89,244,0.5))' }}
+          style={{ width: 150, height: 106, objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(37,89,244,0.5))' }}
         />
         
       </button>
@@ -1145,7 +1145,7 @@ function WaitlistSection() {
             <BtnBlue onClick={handleJoin}>{done ? "You're in ✓" : 'Join →'}</BtnBlue>
           </div>
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11.5, color: 'rgba(255,255,255,0.22)', marginTop: 16, letterSpacing: '0.03em' }}>
-            No spam. Unsubscribe anytime. Early access = founder pricing.
+             Get early access with founder pricing. No spam. Unsubscribe anytime.
           </p>
         </Reveal>
       </div>
@@ -1215,7 +1215,7 @@ function Footer() {
               alt="FretPractice"
               style={{ height: 52, width: 'auto', objectFit: 'contain' }}
               />
-            <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 16, letterSpacing: '0.06em', color: '#fff' }}>FretPractice</span>
+         
           </div>
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: 'rgba(255,255,255,0.28)', lineHeight: 1.65, maxWidth: 220, marginBottom: 22 }}>
             AI-powered guitar practice. Structured sessions. Real progress.
@@ -1241,7 +1241,7 @@ function Footer() {
           <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', marginBottom: 18 }}>Company</div>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <li><FLink id="founder">About</FLink></li>
-            <li><FLink href="mailto:fretpractice@mobrio.studio">fretpractice@mobrio.studio</FLink></li>
+          
             <li><FLink href="#">Privacy Policy</FLink></li>
             <li><FLink href="#">Terms of Use</FLink></li>
           </ul>
