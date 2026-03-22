@@ -980,12 +980,10 @@ function ProblemSection() {
   }, [mouse])
 
   const cards = [
-    { top: 0, left: 0, right: 'auto', bottom: 'auto', w: isMobile ? 180 : 215, label: 'Session Focus', val: '94', unit: '%', badge: '↑ 31% this month', extra: null },
-    { top: isMobile ? 80 : 65, right: 0, left: 'auto', bottom: 'auto', w: isMobile ? 190 : 230, label: 'Practice Streak', val: '12', unit: ' days', badge: null, extra: 'streak' },
-    { bottom: 10, top: 'auto', left: isMobile ? 20 : 45, right: 'auto', w: isMobile ? 170 : 210, label: 'Avg Improvement', val: '+28', unit: '% accuracy', badge: null, extra: null },
+    { label: 'Session Focus', val: '94', unit: '%', badge: '↑ 31% this month', extra: null, icon: '◎' },
+    { label: 'Practice Streak', val: '12', unit: ' days', badge: null, extra: 'streak', icon: '▦' },
+    { label: 'Avg Improvement', val: '+28', unit: '% accuracy', badge: null, extra: null, icon: '↗' },
   ]
-
-  const icons = ['◎', '▦', '↗']
 
   return (
     <section id="problem" style={{ padding: 'var(--padding-y) 0', background: '#0a0d17' }}>
@@ -1002,12 +1000,12 @@ function ProblemSection() {
           <Eyebrow>The Problem</Eyebrow>
           <h2 style={{ 
             fontFamily: "'Bebas Neue', sans-serif", 
-            fontSize: isMobile ? 'clamp(32px,6vw,48px)' : 'clamp(36px,5vw,68px)', 
+            fontSize: isMobile ? 'clamp(28px,5vw,40px)' : 'clamp(36px,5vw,68px)', 
             fontWeight: 400, 
             lineHeight: 0.96, 
             letterSpacing: '0.04em', 
             color: '#fff', 
-            marginBottom: isMobile ? 24 : 36 
+            marginBottom: isMobile ? 20 : 36 
           }}>
             Most guitarists<br />practice.<br /><span style={{ color: '#2559F4' }}>Few improve.</span>
           </h2>
@@ -1018,7 +1016,7 @@ function ProblemSection() {
           ].map((p, i) => (
             <p key={i} style={{ 
               fontFamily: "'DM Sans', sans-serif", 
-              fontSize: isMobile ? 14.5 : 15.5, 
+              fontSize: isMobile ? 13 : 15.5, 
               lineHeight: 1.85, 
               color: 'rgba(255,255,255,0.46)', 
               fontWeight: 300, 
@@ -1030,39 +1028,148 @@ function ProblemSection() {
         </Reveal>
 
         <Reveal delay={0.18}>
-          <div style={{ position: 'relative', height: isMobile ? 320 : 400 }}>
-            {cards.map((c, i) => (
-              <div
-                key={i}
-                data-hover
-                style={{
-                  position: 'absolute',
-                  top: c.top, left: c.left, right: c.right, bottom: c.bottom,
-                  width: c.w,
-                  background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, padding: isMobile ? 20 : 24,
-                  boxShadow: '0 24px 70px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3)',
-                  transform: cardTransform(i),
-                  transition: 'transform 0.8s cubic-bezier(0.16,1,0.3,1)',
-                  animation: `scFloat ${9 + i * 3}s ease-in-out infinite ${i * 2}s`,
-                  cursor: 'none',
-                }}
-              >
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(37,89,244,0.12)', border: '1px solid rgba(37,89,244,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, fontSize: 14, color: '#2559F4' }}>{icons[i]}</div>
-                <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10.5, color: 'rgba(255,255,255,0.28)', marginBottom: 4 }}>{c.label}</div>
-                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: isMobile ? 28 : 34, letterSpacing: '0.02em', color: '#fff', lineHeight: 1 }}>
-                  {c.val}<span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: isMobile ? 11 : 13, fontWeight: 300, color: 'rgba(255,255,255,0.3)' }}>{c.unit}</span>
-                </div>
-                {c.badge && <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', background: 'rgba(34,197,94,0.1)', color: '#22c55e', fontSize: 10, fontWeight: 500, padding: '3px 9px', borderRadius: 100, fontFamily: "'DM Sans', sans-serif" }}>{c.badge}</div>}
-                {c.extra === 'streak' && (
-                  <div style={{ marginTop: 10, display: 'flex', gap: 3 }}>
-                    {[1, 1, 1, 0.35, 0.08, 0.08, 0.08].map((op, j) => (
-                      <div key={j} style={{ width: 14, height: 14, borderRadius: 3, background: `rgba(37,89,244,${op})` }} />
-                    ))}
+          {/* Mobile: Stacked cards, Desktop: Absolute positioned cards */}
+          {isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {cards.map((c, i) => (
+                <div
+                  key={i}
+                  data-hover
+                  style={{
+                    background: '#111827', 
+                    border: '1px solid rgba(255,255,255,0.08)', 
+                    borderRadius: 16, 
+                    padding: 20,
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                    cursor: 'none',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                    e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.5)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ 
+                      width: 40, 
+                      height: 40, 
+                      borderRadius: 10, 
+                      background: 'rgba(37,89,244,0.12)', 
+                      border: '1px solid rgba(37,89,244,0.25)', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      fontSize: 16, 
+                      color: '#2559F4',
+                      flexShrink: 0
+                    }}>
+                      {c.icon}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ 
+                        fontFamily: "'DM Sans', sans-serif", 
+                        fontSize: 9.5, 
+                        color: 'rgba(255,255,255,0.28)', 
+                        marginBottom: 4,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        {c.label}
+                      </div>
+                      <div style={{ 
+                        fontFamily: "'Bebas Neue', sans-serif", 
+                        fontSize: 24, 
+                        letterSpacing: '0.02em', 
+                        color: '#fff', 
+                        lineHeight: 1,
+                        display: 'flex',
+                        alignItems: 'baseline',
+                        gap: 4
+                      }}>
+                        {c.val}
+                        <span style={{ 
+                          fontFamily: "'DM Sans', sans-serif", 
+                          fontSize: 10, 
+                          fontWeight: 300, 
+                          color: 'rgba(255,255,255,0.3)' 
+                        }}>
+                          {c.unit}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
+                  {c.badge && (
+                    <div style={{ 
+                      marginTop: 12, 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      background: 'rgba(34,197,94,0.1)', 
+                      color: '#22c55e', 
+                      fontSize: 9, 
+                      fontWeight: 500, 
+                      padding: '2px 8px', 
+                      borderRadius: 100, 
+                      fontFamily: "'DM Sans', sans-serif" 
+                    }}>
+                      {c.badge}
+                    </div>
+                  )}
+                  {c.extra === 'streak' && (
+                    <div style={{ marginTop: 12, display: 'flex', gap: 2 }}>
+                      {[1, 1, 1, 0.35, 0.08, 0.08, 0.08].map((op, j) => (
+                        <div key={j} style={{ width: 12, height: 12, borderRadius: 2, background: `rgba(37,89,244,${op})` }} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Desktop: Keep original absolute positioning */
+            <div style={{ position: 'relative', height: 400 }}>
+              {cards.map((c, i) => (
+                <div
+                  key={i}
+                  data-hover
+                  style={{
+                    position: 'absolute',
+                    top: i === 0 ? 0 : i === 1 ? 65 : 'auto',
+                    left: i === 0 ? 0 : i === 2 ? 45 : 'auto',
+                    right: i === 1 ? 0 : 'auto',
+                    bottom: i === 2 ? 10 : 'auto',
+                    width: i === 0 ? 215 : i === 1 ? 230 : 210,
+                    background: '#111827', 
+                    border: '1px solid rgba(255,255,255,0.08)', 
+                    borderRadius: 18, 
+                    padding: 24,
+                    boxShadow: '0 24px 70px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3)',
+                    transform: cardTransform(i),
+                    transition: 'transform 0.8s cubic-bezier(0.16,1,0.3,1)',
+                    animation: `scFloat ${9 + i * 3}s ease-in-out infinite ${i * 2}s`,
+                    cursor: 'none',
+                  }}
+                >
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(37,89,244,0.12)', border: '1px solid rgba(37,89,244,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, fontSize: 14, color: '#2559F4' }}>{c.icon}</div>
+                  <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10.5, color: 'rgba(255,255,255,0.28)', marginBottom: 4 }}>{c.label}</div>
+                  <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 34, letterSpacing: '0.02em', color: '#fff', lineHeight: 1 }}>
+                    {c.val}<span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 300, color: 'rgba(255,255,255,0.3)' }}>{c.unit}</span>
+                  </div>
+                  {c.badge && <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', background: 'rgba(34,197,94,0.1)', color: '#22c55e', fontSize: 10, fontWeight: 500, padding: '3px 9px', borderRadius: 100, fontFamily: "'DM Sans', sans-serif" }}>{c.badge}</div>}
+                  {c.extra === 'streak' && (
+                    <div style={{ marginTop: 10, display: 'flex', gap: 3 }}>
+                      {[1, 1, 1, 0.35, 0.08, 0.08, 0.08].map((op, j) => (
+                        <div key={j} style={{ width: 14, height: 14, borderRadius: 3, background: `rgba(37,89,244,${op})` }} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </Reveal>
       </div>
     </section>
