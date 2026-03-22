@@ -37,6 +37,32 @@ interface SocialItem {
   svgPath: string
 }
 
+// ─── RESPONSIVE UTILITIES ───────────────────────────────────────────────────────
+
+function useResponsive() {
+  const [width, setWidth] = useState(0)
+  useEffect(() => {
+    const handleResize = () => setWidth(window.innerWidth)
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+  
+  return {
+    isMobile: width < 768,
+    isTablet: width >= 768 && width < 1024,
+    isDesktop: width >= 1024,
+    width
+  }
+}
+
+function responsiveValue(mobile: any, tablet?: any, desktop?: any) {
+  if (typeof mobile === 'object' && !tablet && !desktop) {
+    return mobile // If passing an object with breakpoints
+  }
+  return { mobile, tablet, desktop }
+}
+
 // ─── HOOKS ────────────────────────────────────────────────────────────────────
 
 function useScrollY(): number {
@@ -109,6 +135,37 @@ function GlobalStyles() {
         overflow-x: hidden;
         -webkit-font-smoothing: antialiased;
         cursor: none;
+      }
+
+      /* CSS Variables for responsive values */
+      :root {
+        --padding-x: clamp(20px, 5vw, 52px);
+        --padding-y: clamp(60px, 8vw, 140px);
+        --max-width: min(1100px, 95vw);
+        --gap: clamp(20px, 4vw, 100px);
+        --card-gap: clamp(14px, 2vw, 20px);
+        --border-radius: clamp(12px, 2vw, 22px);
+      }
+
+      /* Mobile-first responsive grid */
+      .responsive-grid {
+        display: grid;
+        gap: var(--card-gap);
+      }
+      
+      .responsive-grid-1 { grid-template-columns: 1fr; }
+      .responsive-grid-2 { grid-template-columns: 1fr; }
+      .responsive-grid-3 { grid-template-columns: 1fr; }
+      .responsive-grid-4 { grid-template-columns: repeat(2, 1fr); }
+      
+      @media (min-width: 768px) {
+        .responsive-grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .responsive-grid-3 { grid-template-columns: repeat(2, 1fr); }
+        .responsive-grid-4 { grid-template-columns: repeat(4, 1fr); }
+      }
+      
+      @media (min-width: 1024px) {
+        .responsive-grid-3 { grid-template-columns: repeat(3, 1fr); }
       }
 
       /* Grain overlay */
@@ -342,7 +399,9 @@ function BtnOutline({
 
 function Nav() {
   const y = useScrollY()
+  const { isMobile } = useResponsive()
   const stuck = y > 20
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const links: { label: string; id: string }[] = [
     { label: 'Problem', id: 'problem' },
@@ -355,8 +414,8 @@ function Nav() {
   return (
     <nav style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
-      height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '0 52px',
+      height: isMobile ? 60 : 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '0 var(--padding-x)',
       background: stuck ? 'rgba(0,0,0,0.88)' : 'transparent',
       backdropFilter: stuck ? 'blur(24px) saturate(160%)' : 'none',
       borderBottom: stuck ? '1px solid rgba(255,255,255,0.07)' : '1px solid transparent',
@@ -374,37 +433,106 @@ function Nav() {
         <img
           src={LOGO_SRC}
           alt="FretPractice logo"
-          style={{ width: 150, height: 106, objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(37,89,244,0.5))' }}
+          style={{ 
+            width: isMobile ? 120 : 150, 
+            height: isMobile ? 85 : 106, 
+            objectFit: 'contain', 
+            filter: 'drop-shadow(0 0 10px rgba(37,89,244,0.5))' 
+          }}
         />
-        
       </button>
 
-      {/* Center links */}
-      <ul style={{
-        display: 'flex', alignItems: 'center', gap: 4, listStyle: 'none',
-        position: 'absolute', left: '50%', transform: 'translateX(-50%)',
-        margin: 0, padding: 0,
-      }}>
-        {links.map(l => (
-          <li key={l.id}>
-            <NavLink label={l.label} id={l.id} />
-          </li>
-        ))}
-      </ul>
+      {/* Desktop Navigation */}
+      {!isMobile && (
+        <>
+          {/* Center links */}
+          <ul style={{
+            display: 'flex', alignItems: 'center', gap: 4, listStyle: 'none',
+            position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+            margin: 0, padding: 0,
+          }}>
+            {links.map(l => (
+              <li key={l.id}>
+                <NavLink label={l.label} id={l.id} />
+              </li>
+            ))}
+          </ul>
 
-      {/* CTA */}
-      <BtnBlue onClick={() => scrollTo('waitlist')} style={{ padding: '9px 22px', fontSize: 13 }}>
-        Join Early Access
-      </BtnBlue>
+          {/* CTA */}
+          <BtnBlue onClick={() => scrollTo('waitlist')} style={{ padding: '9px 22px', fontSize: 13 }}>
+            Join Early Access
+          </BtnBlue>
+        </>
+      )}
+
+      {/* Mobile Menu Button */}
+      {isMobile && (
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          data-hover
+          style={{
+            display: 'flex', flexDirection: 'column', gap: 4, background: 'none', border: 'none',
+            cursor: 'none', padding: 8,
+          }}
+        >
+          <span style={{
+            width: 20, height: 2, background: '#fff', borderRadius: 1,
+            transform: mobileMenuOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none',
+            transition: 'transform 0.3s ease',
+          }} />
+          <span style={{
+            width: 20, height: 2, background: '#fff', borderRadius: 1,
+            opacity: mobileMenuOpen ? 0 : 1,
+            transition: 'opacity 0.3s ease',
+          }} />
+          <span style={{
+            width: 20, height: 2, background: '#fff', borderRadius: 1,
+            transform: mobileMenuOpen ? 'rotate(-45deg) translate(7px, -6px)' : 'none',
+            transition: 'transform 0.3s ease',
+          }} />
+        </button>
+      )}
+
+      {/* Mobile Menu */}
+      {isMobile && mobileMenuOpen && (
+        <div style={{
+          position: 'absolute', top: '100%', left: 0, right: 0,
+          background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          padding: '20px var(--padding-x)',
+        }}>
+          <ul style={{
+            display: 'flex', flexDirection: 'column', gap: 12, listStyle: 'none',
+            margin: 0, padding: 0, marginBottom: 20,
+          }}>
+            {links.map(l => (
+              <li key={l.id}>
+                <NavLink 
+                  label={l.label} 
+                  id={l.id}
+                  onClick={() => setMobileMenuOpen(false)}
+                />
+              </li>
+            ))}
+          </ul>
+          <BtnBlue 
+            onClick={() => { scrollTo('waitlist'); setMobileMenuOpen(false) }} 
+            fullWidth
+            style={{ fontSize: 13 }}
+          >
+            Join Early Access
+          </BtnBlue>
+        </div>
+      )}
     </nav>
   )
 }
 
-function NavLink({ label, id }: { label: string; id: string }) {
+function NavLink({ label, id, onClick }: { label: string; id: string; onClick?: () => void }) {
   const [hov, setHov] = useState(false)
   return (
     <button
-      onClick={() => scrollTo(id)}
+      onClick={onClick || (() => scrollTo(id))}
       data-hover
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
@@ -445,6 +573,7 @@ function WaveformBars({ count = 20 }: { count?: number }) {
 }
 
 function AppMockup() {
+  const { isMobile, isTablet } = useResponsive()
   const progFills = useRef<(HTMLDivElement | null)[]>([])
   const progData: Array<[string, number]> = [['Scales', 82], ['Chords', 65], ['Timing', 74]]
 
@@ -467,25 +596,67 @@ function AppMockup() {
   ]
 
   return (
-    <div style={{ marginTop: 84, width: '100%', maxWidth: 920, position: 'relative', animation: 'riseIn 1s cubic-bezier(0.16,1,0.3,1) 0.7s both' }}>
+    <div style={{ 
+      marginTop: isMobile ? 60 : 84, 
+      width: '100%', 
+      maxWidth: isMobile ? '100%' : 920, 
+      position: 'relative', 
+      animation: 'riseIn 1s cubic-bezier(0.16,1,0.3,1) 0.7s both' 
+    }}>
       {/* Glow under */}
-      <div style={{ position: 'absolute', bottom: -50, left: '50%', transform: 'translateX(-50%)', width: '60%', height: 80, background: 'radial-gradient(ellipse, rgba(37,89,244,0.32) 0%, transparent 70%)', filter: 'blur(20px)', pointerEvents: 'none' }} />
+      <div style={{ 
+        position: 'absolute', 
+        bottom: -50, 
+        left: '50%', 
+        transform: 'translateX(-50%)', 
+        width: isMobile ? '80%' : '60%', 
+        height: 80, 
+        background: 'radial-gradient(ellipse, rgba(37,89,244,0.32) 0%, transparent 70%)', 
+        filter: 'blur(20px)', 
+        pointerEvents: 'none' 
+      }} />
 
-      <div style={{ background: '#0f1320', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, overflow: 'hidden', boxShadow: '0 0 0 1px rgba(255,255,255,0.03), 0 4px 16px rgba(0,0,0,0.4), 0 24px 80px rgba(0,0,0,0.55)' }}>
+      <div style={{ 
+        background: '#0f1320', 
+        border: '1px solid rgba(255,255,255,0.08)', 
+        borderRadius: isMobile ? 16 : 20, 
+        overflow: 'hidden', 
+        boxShadow: '0 0 0 1px rgba(255,255,255,0.03), 0 4px 16px rgba(0,0,0,0.4), 0 24px 80px rgba(0,0,0,0.55)' 
+      }}>
         {/* Title bar */}
-        <div style={{ background: 'rgba(0,0,0,0.55)', padding: '13px 18px', display: 'flex', alignItems: 'center', gap: 7, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ 
+          background: 'rgba(0,0,0,0.55)', 
+          padding: isMobile ? '10px 14px' : '13px 18px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 7, 
+          borderBottom: '1px solid rgba(255,255,255,0.06)' 
+        }}>
           <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#FF5F57', display: 'block' }} />
           <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#FEBC2E', display: 'block' }} />
           <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#28C840', display: 'block' }} />
-          <div style={{ margin: '0 auto', background: 'rgba(255,255,255,0.06)', borderRadius: 5, padding: '4px 18px', fontFamily: "'DM Sans', sans-serif", fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
-            fretpractice.app — Practice Session
+          <div style={{ 
+            margin: '0 auto', 
+            background: 'rgba(255,255,255,0.06)', 
+            borderRadius: 5, 
+            padding: isMobile ? '3px 12px' : '4px 18px', 
+            fontFamily: "'DM Sans', sans-serif", 
+            fontSize: isMobile ? 9 : 11, 
+            color: 'rgba(255,255,255,0.25)' 
+          }}>
+            {isMobile ? 'fretpractice.app' : 'fretpractice.app — Practice Session'}
           </div>
         </div>
 
         {/* Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, padding: 24 }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', 
+          gap: isMobile ? 12 : 14, 
+          padding: isMobile ? 16 : 24 
+        }}>
           {/* Fretboard */}
-          <MockCard tag="Fretboard" title="G Major — Position 1">
+          <MockCard tag="Fretboard" title={isMobile ? "G Major" : "G Major — Position 1"}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {fretPattern.map((row, ri) => (
                 <div key={ri} style={{ display: 'flex', gap: 2, height: 9 }}>
@@ -504,10 +675,12 @@ function AppMockup() {
 
           {/* Audio */}
           <MockCard tag="Live Audio" title="Real-time Feedback">
-            <WaveformBars count={18} />
+            <WaveformBars count={isMobile ? 12 : 18} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.55)', flexShrink: 0 }} />
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10.5, color: '#22c55e' }}>G4 detected — Accurate</span>
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: isMobile ? 9 : 10.5, color: '#22c55e' }}>
+                {isMobile ? 'G4 detected' : 'G4 detected — Accurate'}
+              </span>
             </div>
           </MockCard>
 
@@ -516,7 +689,14 @@ function AppMockup() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {progData.map(([label, pct], i) => (
                 <div key={label}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'DM Sans', sans-serif", fontSize: 9.5, color: 'rgba(255,255,255,0.28)', marginBottom: 4 }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    fontFamily: "'DM Sans', sans-serif", 
+                    fontSize: isMobile ? 8.5 : 9.5, 
+                    color: 'rgba(255,255,255,0.28)', 
+                    marginBottom: 4 
+                  }}>
                     <span>{label}</span><span>{pct}%</span>
                   </div>
                   <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden' }}>
@@ -558,39 +738,160 @@ function MockCard({ tag, title, children }: { tag: string; title: string; childr
 }
 
 function Hero() {
+  const { isMobile, isTablet } = useResponsive()
+  
   return (
-    <section id="hero" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '110px 52px 80px', position: 'relative', overflow: 'hidden', textAlign: 'center' }}>
+    <section id="hero" style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      padding: isMobile ? '100px var(--padding-x) 60px' : isTablet ? '110px var(--padding-x) 80px' : '110px var(--padding-x) 80px', 
+      position: 'relative', 
+      overflow: 'hidden', 
+      textAlign: 'center' 
+    }}>
       {/* Ambient glows */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', width: 900, height: 900, top: -300, left: -250, borderRadius: '50%', background: 'radial-gradient(circle, rgba(37,89,244,0.2) 0%, transparent 65%)', filter: 'blur(100px)', animation: 'floatA 20s ease-in-out infinite' }} />
-        <div style={{ position: 'absolute', width: 600, height: 600, bottom: -200, right: -100, borderRadius: '50%', background: 'radial-gradient(circle, rgba(20,33,74,0.7) 0%, transparent 65%)', filter: 'blur(100px)', animation: 'floatB 25s ease-in-out infinite' }} />
-        <div style={{ position: 'absolute', width: 400, height: 400, top: '40%', right: '8%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(37,89,244,0.1) 0%, transparent 65%)', filter: 'blur(80px)', animation: 'floatA 30s ease-in-out infinite reverse' }} />
+        <div style={{ 
+          position: 'absolute', 
+          width: isMobile ? '600px' : '900px', 
+          height: isMobile ? '600px' : '900px', 
+          top: isMobile ? '-200px' : '-300px', 
+          left: isMobile ? '-150px' : '-250px', 
+          borderRadius: '50%', 
+          background: 'radial-gradient(circle, rgba(37,89,244,0.2) 0%, transparent 65%)', 
+          filter: 'blur(100px)', 
+          animation: 'floatA 20s ease-in-out infinite' 
+        }} />
+        <div style={{ 
+          position: 'absolute', 
+          width: isMobile ? '400px' : '600px', 
+          height: isMobile ? '400px' : '600px', 
+          bottom: isMobile ? '-100px' : '-200px', 
+          right: isMobile ? '-50px' : '-100px', 
+          borderRadius: '50%', 
+          background: 'radial-gradient(circle, rgba(20,33,74,0.7) 0%, transparent 65%)', 
+          filter: 'blur(100px)', 
+          animation: 'floatB 25s ease-in-out infinite' 
+        }} />
+        <div style={{ 
+          position: 'absolute', 
+          width: isMobile ? '300px' : '400px', 
+          height: isMobile ? '300px' : '400px', 
+          top: '40%', 
+          right: isMobile ? '5%' : '8%', 
+          borderRadius: '50%', 
+          background: 'radial-gradient(circle, rgba(37,89,244,0.1) 0%, transparent 65%)', 
+          filter: 'blur(80px)', 
+          animation: 'floatA 30s ease-in-out infinite reverse' 
+        }} />
         {/* Dot grid */}
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.075) 1px, transparent 1px)', backgroundSize: '44px 44px', maskImage: 'radial-gradient(ellipse 80% 70% at 50% 42%, black 15%, transparent 72%)', WebkitMaskImage: 'radial-gradient(ellipse 80% 70% at 50% 42%, black 15%, transparent 72%)' }} />
+        <div style={{ 
+          position: 'absolute', 
+          inset: 0, 
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.075) 1px, transparent 1px)', 
+          backgroundSize: isMobile ? '30px 30px' : '44px 44px', 
+          maskImage: 'radial-gradient(ellipse 80% 70% at 50% 42%, black 15%, transparent 72%)', 
+          WebkitMaskImage: 'radial-gradient(ellipse 80% 70% at 50% 42%, black 15%, transparent 72%)' 
+        }} />
       </div>
 
       {/* Badge */}
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(37,89,244,0.4)', background: 'rgba(37,89,244,0.08)', borderRadius: 100, padding: '7px 16px 7px 11px', marginBottom: 44, animation: 'riseIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.1s both' }}>
-        <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#2559F4', boxShadow: '0 0 0 4px rgba(37,89,244,0.2)', display: 'block', animation: 'breathe 2.4s ease-in-out infinite' }} />
-        <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' }}>AI-Powered Music Practice Platform</span>
+      <div style={{ 
+        display: 'inline-flex', 
+        alignItems: 'center', 
+        gap: 8, 
+        border: '1px solid rgba(37,89,244,0.4)', 
+        background: 'rgba(37,89,244,0.08)', 
+        borderRadius: 100, 
+        padding: isMobile ? '6px 14px 6px 10px' : '7px 16px 7px 11px', 
+        marginBottom: isMobile ? 30 : 44, 
+        animation: 'riseIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.1s both' 
+      }}>
+        <span style={{ 
+          width: 7, 
+          height: 7, 
+          borderRadius: '50%', 
+          background: '#2559F4', 
+          boxShadow: '0 0 0 4px rgba(37,89,244,0.2)', 
+          display: 'block', 
+          animation: 'breathe 2.4s ease-in-out infinite' 
+        }} />
+        <span style={{ 
+          fontFamily: "'DM Sans', sans-serif", 
+          fontSize: isMobile ? 10 : 11, 
+          fontWeight: 500, 
+          letterSpacing: '0.12em', 
+          textTransform: 'uppercase', 
+          color: 'rgba(255,255,255,0.6)' 
+        }}>
+          AI-Powered Music Practice Platform
+        </span>
       </div>
 
       {/* H1 */}
-      <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(52px, 9vw, 120px)', fontWeight: 400, lineHeight: 0.92, letterSpacing: '0.04em', color: '#fff', maxWidth: 900, margin: '0 auto', animation: 'riseIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.2s both' }}>
+      <h1 style={{ 
+        fontFamily: "'Bebas Neue', sans-serif", 
+        fontSize: isMobile ? 'clamp(36px, 8vw, 60px)' : 'clamp(52px, 9vw, 120px)', 
+        fontWeight: 400, 
+        lineHeight: 0.92, 
+        letterSpacing: '0.04em', 
+        color: '#fff', 
+        maxWidth: isMobile ? '100%' : 900, 
+        margin: '0 auto', 
+        animation: 'riseIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.2s both' 
+      }}>
         Practice with<br />
-        <span style={{ background: 'linear-gradient(130deg, #7eb8ff 0%, #2559F4 45%, #1438b0 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>INTENTION.</span>
+        <span style={{ 
+          background: 'linear-gradient(130deg, #7eb8ff 0%, #2559F4 45%, #1438b0 100%)', 
+          WebkitBackgroundClip: 'text', 
+          WebkitTextFillColor: 'transparent', 
+          backgroundClip: 'text' 
+        }}>
+          INTENTION.
+        </span>
       </h1>
 
-      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 'clamp(15px, 1.4vw, 18px)', color: 'rgba(255,255,255,0.48)', fontWeight: 300, lineHeight: 1.78, maxWidth: 520, margin: '28px auto 52px', animation: 'riseIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.3s both' }}>
+      <p style={{ 
+        fontFamily: "'DM Sans', sans-serif", 
+        fontSize: isMobile ? 'clamp(14px, 3vw, 16px)' : 'clamp(15px, 1.4vw, 18px)', 
+        color: 'rgba(255,255,255,0.48)', 
+        fontWeight: 300, 
+        lineHeight: 1.78, 
+        maxWidth: isMobile ? '100%' : 520, 
+        margin: isMobile ? '20px auto 40px' : '28px auto 52px', 
+        animation: 'riseIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.3s both' 
+      }}>
         Structured sessions, real-time feedback, AI tools — one system built to move you forward, not just keep you busy.
       </p>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, animation: 'riseIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.42s both' }}>
-        <BtnBlue onClick={() => scrollTo('waitlist')}>Join Early Access →</BtnBlue>
-        <BtnOutline onClick={() => scrollTo('system')}>Explore the System</BtnOutline>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: isMobile ? 'column' : 'row', 
+        alignItems: 'center', 
+        gap: isMobile ? 12 : 12, 
+        animation: 'riseIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.42s both',
+        width: isMobile ? '100%' : 'auto',
+        maxWidth: isMobile ? '300px' : 'none'
+      }}>
+        <BtnBlue onClick={() => scrollTo('waitlist')} fullWidth={isMobile}>
+          Join Early Access →
+        </BtnBlue>
+        <BtnOutline onClick={() => scrollTo('system')} fullWidth={isMobile}>
+          Explore the System
+        </BtnOutline>
       </div>
 
-      <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11.5, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.04em', marginTop: 18, animation: 'riseIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.54s both' }}>
+      <p style={{ 
+        fontFamily: "'DM Sans', sans-serif", 
+        fontSize: isMobile ? 10.5 : 11.5, 
+        color: 'rgba(255,255,255,0.22)', 
+        letterSpacing: '0.04em', 
+        marginTop: isMobile ? 16 : 18, 
+        animation: 'riseIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.54s both' 
+      }}>
         Early access for serious guitarists. Limited spots.
       </p>
 
@@ -609,9 +910,11 @@ const STATS: StatItem[] = [
 ]
 
 function NumbersStrip() {
+  const { isMobile } = useResponsive()
+  
   return (
     <Reveal>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className={`responsive-grid-4`} style={{ borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         {STATS.map((s, i) => (
           <StatCell key={i} val={s.val} lbl={s.lbl} last={i === STATS.length - 1} />
         ))}
@@ -622,15 +925,40 @@ function NumbersStrip() {
 
 function StatCell({ val, lbl, last }: { val: string; lbl: string; last: boolean }) {
   const [hov, setHov] = useState(false)
+  const { isMobile } = useResponsive()
+  
   return (
     <div
       data-hover
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      style={{ padding: '32px 44px', borderRight: last ? 'none' : '1px solid rgba(255,255,255,0.07)', background: hov ? 'rgba(37,89,244,0.04)' : 'transparent', transition: 'background 0.3s', cursor: 'none' }}
+      style={{ 
+        padding: isMobile ? '24px 20px' : '32px 44px', 
+        borderRight: last ? 'none' : '1px solid rgba(255,255,255,0.07)', 
+        background: hov ? 'rgba(37,89,244,0.04)' : 'transparent', 
+        transition: 'background 0.3s', 
+        cursor: 'none',
+        textAlign: 'center'
+      }}
     >
-      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(28px,3.5vw,42px)', letterSpacing: '0.04em', color: '#fff', marginBottom: 5 }}>{val}</div>
-      <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: 'rgba(255,255,255,0.28)', letterSpacing: '0.02em' }}>{lbl}</div>
+      <div style={{ 
+        fontFamily: "'Bebas Neue', sans-serif", 
+        fontSize: isMobile ? 'clamp(24px,4vw,32px)' : 'clamp(28px,3.5vw,42px)', 
+        letterSpacing: '0.04em', 
+        color: '#fff', 
+        marginBottom: 5 
+      }}>
+        {val}
+      </div>
+      <div style={{ 
+        fontFamily: "'DM Sans', sans-serif", 
+        fontSize: isMobile ? 11 : 12, 
+        color: 'rgba(255,255,255,0.28)', 
+        letterSpacing: '0.02em',
+        lineHeight: 1.3
+      }}>
+        {lbl}
+      </div>
     </div>
   )
 }
@@ -639,6 +967,7 @@ function StatCell({ val, lbl, last }: { val: string; lbl: string; last: boolean 
 
 function ProblemSection() {
   const mouse = useMouse()
+  const { isMobile, isTablet } = useResponsive()
   const sectionRef = useRef<HTMLDivElement>(null)
 
   const cardTransform = useCallback((index: number): string => {
@@ -651,19 +980,35 @@ function ProblemSection() {
   }, [mouse])
 
   const cards = [
-    { top: 0, left: 0, right: 'auto', bottom: 'auto', w: 215, label: 'Session Focus', val: '94', unit: '%', badge: '↑ 31% this month', extra: null },
-    { top: 65, right: 0, left: 'auto', bottom: 'auto', w: 230, label: 'Practice Streak', val: '12', unit: ' days', badge: null, extra: 'streak' },
-    { bottom: 10, top: 'auto', left: 45, right: 'auto', w: 210, label: 'Avg Improvement', val: '+28', unit: '% accuracy', badge: null, extra: null },
+    { top: 0, left: 0, right: 'auto', bottom: 'auto', w: isMobile ? 180 : 215, label: 'Session Focus', val: '94', unit: '%', badge: '↑ 31% this month', extra: null },
+    { top: isMobile ? 80 : 65, right: 0, left: 'auto', bottom: 'auto', w: isMobile ? 190 : 230, label: 'Practice Streak', val: '12', unit: ' days', badge: null, extra: 'streak' },
+    { bottom: 10, top: 'auto', left: isMobile ? 20 : 45, right: 'auto', w: isMobile ? 170 : 210, label: 'Avg Improvement', val: '+28', unit: '% accuracy', badge: null, extra: null },
   ]
 
   const icons = ['◎', '▦', '↗']
 
   return (
-    <section id="problem" style={{ padding: '140px 0', background: '#0a0d17' }}>
-      <div ref={sectionRef} style={{ maxWidth: 1100, margin: '0 auto', padding: '0 52px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 100, alignItems: 'center' }}>
+    <section id="problem" style={{ padding: 'var(--padding-y) 0', background: '#0a0d17' }}>
+      <div ref={sectionRef} style={{ 
+        maxWidth: 'var(--max-width)', 
+        margin: '0 auto', 
+        padding: '0 var(--padding-x)', 
+        display: 'grid', 
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
+        gap: isMobile ? 40 : 100, 
+        alignItems: 'center' 
+      }}>
         <Reveal>
           <Eyebrow>The Problem</Eyebrow>
-          <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(36px,5vw,68px)', fontWeight: 400, lineHeight: 0.96, letterSpacing: '0.04em', color: '#fff', marginBottom: 36 }}>
+          <h2 style={{ 
+            fontFamily: "'Bebas Neue', sans-serif", 
+            fontSize: isMobile ? 'clamp(32px,6vw,48px)' : 'clamp(36px,5vw,68px)', 
+            fontWeight: 400, 
+            lineHeight: 0.96, 
+            letterSpacing: '0.04em', 
+            color: '#fff', 
+            marginBottom: isMobile ? 24 : 36 
+          }}>
             Most guitarists<br />practice.<br /><span style={{ color: '#2559F4' }}>Few improve.</span>
           </h2>
           {[
@@ -671,12 +1016,21 @@ function ProblemSection() {
             "The real issue isn't effort. It's structure. Without a system, practice is just playing — and playing isn't progress.",
             'FretPractice changes that. Every session has a goal, every note has feedback, every week has measurable data.',
           ].map((p, i) => (
-            <p key={i} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15.5, lineHeight: 1.85, color: 'rgba(255,255,255,0.46)', fontWeight: 300, marginBottom: 14 }}>{p}</p>
+            <p key={i} style={{ 
+              fontFamily: "'DM Sans', sans-serif", 
+              fontSize: isMobile ? 14.5 : 15.5, 
+              lineHeight: 1.85, 
+              color: 'rgba(255,255,255,0.46)', 
+              fontWeight: 300, 
+              marginBottom: 14 
+            }}>
+              {p}
+            </p>
           ))}
         </Reveal>
 
         <Reveal delay={0.18}>
-          <div style={{ position: 'relative', height: 400 }}>
+          <div style={{ position: 'relative', height: isMobile ? 320 : 400 }}>
             {cards.map((c, i) => (
               <div
                 key={i}
@@ -685,7 +1039,7 @@ function ProblemSection() {
                   position: 'absolute',
                   top: c.top, left: c.left, right: c.right, bottom: c.bottom,
                   width: c.w,
-                  background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, padding: 24,
+                  background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, padding: isMobile ? 20 : 24,
                   boxShadow: '0 24px 70px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3)',
                   transform: cardTransform(i),
                   transition: 'transform 0.8s cubic-bezier(0.16,1,0.3,1)',
@@ -695,8 +1049,8 @@ function ProblemSection() {
               >
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(37,89,244,0.12)', border: '1px solid rgba(37,89,244,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, fontSize: 14, color: '#2559F4' }}>{icons[i]}</div>
                 <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 10.5, color: 'rgba(255,255,255,0.28)', marginBottom: 4 }}>{c.label}</div>
-                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 34, letterSpacing: '0.02em', color: '#fff', lineHeight: 1 }}>
-                  {c.val}<span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 300, color: 'rgba(255,255,255,0.3)' }}>{c.unit}</span>
+                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: isMobile ? 28 : 34, letterSpacing: '0.02em', color: '#fff', lineHeight: 1 }}>
+                  {c.val}<span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: isMobile ? 11 : 13, fontWeight: 300, color: 'rgba(255,255,255,0.3)' }}>{c.unit}</span>
                 </div>
                 {c.badge && <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', background: 'rgba(34,197,94,0.1)', color: '#22c55e', fontSize: 10, fontWeight: 500, padding: '3px 9px', borderRadius: 100, fontFamily: "'DM Sans', sans-serif" }}>{c.badge}</div>}
                 {c.extra === 'streak' && (
@@ -754,9 +1108,11 @@ function FeatureCard({ f }: { f: Feature }) {
 }
 
 function SystemSection() {
+  const { isMobile } = useResponsive()
+  
   return (
-    <section id="system" style={{ padding: '140px 0', background: '#000' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 52px' }}>
+    <section id="system" style={{ padding: 'var(--padding-y) 0', background: '#000' }}>
+      <div style={{ maxWidth: 'var(--max-width)', margin: '0 auto', padding: '0 var(--padding-x)' }}>
         <Reveal>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 64, gap: 40, flexWrap: 'wrap' }}>
             <div>
@@ -772,7 +1128,7 @@ function SystemSection() {
         </Reveal>
 
         <Reveal delay={0.1}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 2, background: 'rgba(255,255,255,0.07)', border: '2px solid rgba(255,255,255,0.07)', borderRadius: 22, overflow: 'hidden' }}>
+          <div className={`responsive-grid-3`} style={{ gap: 2, background: 'rgba(255,255,255,0.07)', border: '2px solid rgba(255,255,255,0.07)', borderRadius: 22, overflow: 'hidden' }}>
             {FEATURES.map((f, i) => <FeatureCard key={i} f={f} />)}
           </div>
         </Reveal>
@@ -844,10 +1200,11 @@ function StepRow({ s, last }: { s: StepItem; last: boolean }) {
 }
 
 function HowSection() {
+  const { isMobile } = useResponsive()
   const timer = useTimer()
   return (
-    <section id="how" style={{ padding: '140px 0', background: '#0a0d17' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 52px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 100, alignItems: 'center' }}>
+    <section id="how" style={{ padding: 'var(--padding-y) 0', background: '#0a0d17' }}>
+      <div style={{ maxWidth: 'var(--max-width)', margin: '0 auto', padding: '0 var(--padding-x)', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 40 : 100, alignItems: 'center' }}>
         <Reveal>
           <Eyebrow>How It Works</Eyebrow>
           <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(40px,5.5vw,72px)', fontWeight: 400, lineHeight: 0.96, letterSpacing: '0.04em', color: '#fff', marginBottom: 52 }}>
@@ -916,23 +1273,25 @@ function WhoItem({ text, last }: { text: string; last: boolean }) {
 }
 
 function WhoSection() {
-  const items = [
-    'Just getting serious and need a real system to follow',
-    'Stuck at intermediate despite hours of practice',
-    'Trying to break out of a plateau with clarity and structure',
-    'Want to understand the fretboard — not just memorize tabs',
-    'Serious about tracking and measuring their own growth',
-  ]
-
+  const { isMobile } = useResponsive()
+  
   return (
-    <section id="who" style={{ padding: '140px 0', background: '#000' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 52px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'start' }}>
+    <section id="who" style={{ padding: 'var(--padding-y) 0', background: '#000' }}>
+      <div style={{ maxWidth: 'var(--max-width)', margin: '0 auto', padding: '0 var(--padding-x)', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 40 : 80, alignItems: 'start' }}>
         <Reveal>
           <Eyebrow>Built For</Eyebrow>
           <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(36px,5vw,64px)', fontWeight: 400, lineHeight: 0.96, letterSpacing: '0.04em', color: '#fff', marginBottom: 44 }}>
             Guitarists who want<br />to improve.<br />Not just play.
           </h2>
-          <div>{items.map((item, i) => <WhoItem key={i} text={item} last={i === items.length - 1} />)}</div>
+          <div>
+            {[
+              'Just getting serious and need a real system to follow',
+              'Stuck at intermediate despite hours of practice',
+              'Trying to break out of a plateau with clarity and structure',
+              'Want to understand the fretboard — not just memorize tabs',
+              'Serious about tracking and measuring their own growth',
+            ].map((item: string, i: number) => <WhoItem key={i} text={item} last={i === 4} />)}
+          </div>
         </Reveal>
 
         <Reveal delay={0.2}>
@@ -1011,9 +1370,11 @@ function PriceCard({ t }: { t: PricingTier }) {
 }
 
 function PricingSection() {
+  const { isMobile } = useResponsive()
+  
   return (
-    <section id="pricing" style={{ padding: '140px 0', background: '#0a0d17' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 52px' }}>
+    <section id="pricing" style={{ padding: 'var(--padding-y) 0', background: '#0a0d17' }}>
+      <div style={{ maxWidth: 'var(--max-width)', margin: '0 auto', padding: '0 var(--padding-x)' }}>
         <Reveal>
           <div style={{ textAlign: 'center', maxWidth: 560, margin: '0 auto 72px' }}>
             <Eyebrow center>Pricing</Eyebrow>
@@ -1027,7 +1388,7 @@ function PricingSection() {
         </Reveal>
 
         <Reveal delay={0.1}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20, alignItems: 'start' }}>
+          <div className={`responsive-grid-3`} style={{ gap: 20, alignItems: 'start' }}>
             {PRICING_TIERS.map((t, i) => <PriceCard key={i} t={t} />)}
           </div>
           <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: 'rgba(255,255,255,0.22)', textAlign: 'center', marginTop: 40, letterSpacing: '0.03em' }}>
@@ -1061,13 +1422,14 @@ function ChipTag({ children }: { children: React.ReactNode }) {
 }
 
 function FounderSection() {
+  const { isMobile } = useResponsive()
   const chips = ['Student of Amyt Dutta' , 'Google Developer Expert in ANDROID', '13+ yrs Engineering', '200M+ Users', '5+ Unicorn Startups Over SEA', '18+ yrs Guitar']
 
   return (
-    <section id="founder" style={{ padding: '140px 0', background: '#000' }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 52px' }}>
+    <section id="founder" style={{ padding: 'var(--padding-y) 0', background: '#000' }}>
+      <div style={{ maxWidth: 'var(--max-width)', margin: '0 auto', padding: '0 var(--padding-x)' }}>
         <Reveal>
-          <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: 72, alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '350px 1fr', gap: isMobile ? 40 : 72, alignItems: 'center' }}>
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <div style={{ width: 375, height: 400, borderRadius: 24, background: 'linear-gradient(145deg, #111d36, #0a1020)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 30% 30%, rgba(37,89,244,0.14), transparent 65%)' }} />
@@ -1097,6 +1459,7 @@ function FounderSection() {
 // ─── WAITLIST ────────────────────────────────────────────────────────────────
 
 function WaitlistSection() {
+  const { isMobile } = useResponsive()
   const [email, setEmail] = useState('')
   const [done, setDone] = useState(false)
   const [error, setError] = useState(false)
@@ -1112,9 +1475,9 @@ function WaitlistSection() {
   }, [email])
 
   return (
-    <section id="waitlist" style={{ padding: '180px 0', textAlign: 'center', position: 'relative', overflow: 'hidden', background: '#000' }}>
+    <section id="waitlist" style={{ padding: isMobile ? '120px 0' : '180px 0', textAlign: 'center', position: 'relative', overflow: 'hidden', background: '#000' }}>
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 55% at 50% 50%, rgba(37,89,244,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 52px', position: 'relative', zIndex: 2 }}>
+      <div style={{ maxWidth: 'var(--max-width)', margin: '0 auto', padding: '0 var(--padding-x)', position: 'relative', zIndex: 2 }}>
         <Reveal>
           <Eyebrow center>Early Access</Eyebrow>
           <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(44px,7vw,96px)', fontWeight: 400, lineHeight: 0.92, letterSpacing: '0.04em', color: '#fff', marginBottom: 22 }}>
@@ -1205,9 +1568,18 @@ function FLink({ children, id, href }: { children: React.ReactNode; id?: string;
 }
 
 function Footer() {
+  const { isMobile } = useResponsive()
+  
   return (
-    <footer style={{ background: '#000', borderTop: '1px solid rgba(255,255,255,0.07)', padding: '70px 52px 42px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr 1fr 1fr', gap: 60, maxWidth: 1100, margin: '0 auto', marginBottom: 60 }}>
+    <footer style={{ background: '#000', borderTop: '1px solid rgba(255,255,255,0.07)', padding: isMobile ? '50px var(--padding-x) 30px' : '70px var(--padding-x) 42px' }}>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: isMobile ? '1fr' : '280px 1fr 1fr 1fr', 
+        gap: isMobile ? 40 : 60, 
+        maxWidth: 'var(--max-width)', 
+        margin: '0 auto', 
+        marginBottom: 60 
+      }}>
         {/* Brand */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
