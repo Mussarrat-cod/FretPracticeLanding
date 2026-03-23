@@ -333,28 +333,33 @@ function Reveal({ children, delay = 0, style = {} }: {
 // ─── BUTTONS ──────────────────────────────────────────────────────────────────
 
 function BtnBlue({
-  children, onClick, fullWidth = false, style = {}
+  children, onClick, fullWidth = false, style = {}, disabled = false
 }: {
   children: React.ReactNode
   onClick?: () => void
   fullWidth?: boolean
   style?: React.CSSProperties
+  disabled?: boolean
 }) {
   const [hov, setHov] = useState(false)
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       data-hover
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        background: '#2559F4', color: '#fff', border: 'none', cursor: 'none',
+        background: disabled ? 'rgba(37,89,244,0.5)' : '#2559F4', 
+        color: disabled ? 'rgba(255,255,255,0.7)' : '#fff', 
+        border: 'none', 
+        cursor: disabled ? 'not-allowed' : 'none',
         fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 500,
         padding: '14px 30px', borderRadius: 10,
         width: fullWidth ? '100%' : 'auto',
-        boxShadow: hov ? '0 0 0 1px rgba(37,89,244,0.7), 0 16px 48px rgba(37,89,244,0.48)' : 'none',
-        transform: hov ? 'translateY(-2px)' : 'none',
+        boxShadow: hov && !disabled ? '0 0 0 1px rgba(37,89,244,0.7), 0 16px 48px rgba(37,89,244,0.48)' : 'none',
+        transform: hov && !disabled ? 'translateY(-2px)' : 'none',
         transition: 'box-shadow 0.35s cubic-bezier(0.16,1,0.3,1), transform 0.3s cubic-bezier(0.16,1,0.3,1)',
         ...style,
       }}
@@ -1433,7 +1438,7 @@ const PRICING_TIERS: PricingTier[] = [
   },
 ]
 
-function PriceCard({ t }: { t: PricingTier }) {
+function PriceCard({ t, openModal }: { t: PricingTier; openModal: () => void }) {
   const [hov, setHov] = useState(false)
   return (
     <div
@@ -1469,8 +1474,8 @@ function PriceCard({ t }: { t: PricingTier }) {
       </ul>
 
       {t.hot
-        ? <BtnBlue onClick={() => scrollTo('waitlist')} fullWidth>{t.cta}</BtnBlue>
-        : <BtnOutline onClick={() => scrollTo('waitlist')} fullWidth>{t.cta}</BtnOutline>
+        ? <BtnBlue onClick={openModal} fullWidth>{t.cta}</BtnBlue>
+        : <BtnOutline onClick={openModal} fullWidth>{t.cta}</BtnOutline>
       }
     </div>
   )
@@ -1478,32 +1483,113 @@ function PriceCard({ t }: { t: PricingTier }) {
 
 function PricingSection() {
   const { isMobile } = useResponsive()
-  
-  return (
-    <section id="pricing" style={{ padding: 'var(--padding-y) 0', background: '#0a0d17' }}>
-      <div style={{ maxWidth: 'var(--max-width)', margin: '0 auto', padding: '0 var(--padding-x)' }}>
-        <Reveal>
-          <div style={{ textAlign: 'center', maxWidth: 560, margin: '0 auto 72px' }}>
-            <Eyebrow center>Pricing</Eyebrow>
-            <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(40px,5.5vw,72px)', fontWeight: 400, lineHeight: 0.96, letterSpacing: '0.04em', color: '#fff', marginBottom: 18 }}>
-              Simple pricing.<br />Coming soon.
-            </h2>
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, lineHeight: 1.8, color: 'rgba(255,255,255,0.44)', fontWeight: 300 }}>
-              Tiered access for every level of commitment. Join early — founding members get the best rates.
-            </p>
-          </div>
-        </Reveal>
+  const [showModal, setShowModal] = useState(false)
+  const [email, setEmail] = useState('')
+  const [done, setDone] = useState(false)
+  const [error, setError] = useState(false)
+  const [name, setName] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [countryCode, setCountryCode] = useState('+91')
+  const [experience, setExperience] = useState('')
+  const [featureRequest, setFeatureRequest] = useState('')
+  const [willingToResearch, setWillingToResearch] = useState(false)
 
-        <Reveal delay={0.1}>
-          <div className={`responsive-grid-3`} style={{ gap: 20, alignItems: 'start' }}>
-            {PRICING_TIERS.map((t, i) => <PriceCard key={i} t={t} />)}
-          </div>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: 'rgba(255,255,255,0.22)', textAlign: 'center', marginTop: 40, letterSpacing: '0.03em' }}>
-            Pricing finalised closer to public launch. Early access members get Exclusive Pricing.
-          </p>
-        </Reveal>
-      </div>
-    </section>
+  const handleJoin = useCallback(() => {
+    const isNameValid = name.trim().length > 0
+    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+    
+    if (isNameValid && isEmailValid) {
+      setDone(true)
+      setError(false)
+      // In real app, submit to backend here with all form data
+      const formData = {
+        name: name.trim(),
+        email: email.trim(),
+        whatsapp: whatsapp ? `${countryCode}${whatsapp}` : '',
+        experience,
+        featureRequest: featureRequest.trim(),
+        willingToResearch
+      }
+      console.log('Form submitted:', formData)
+      setTimeout(() => {
+        setDone(false)
+        setShowModal(false)
+        setName('')
+        setEmail('')
+        setWhatsapp('')
+        setCountryCode('+91')
+        setExperience('')
+        setFeatureRequest('')
+        setWillingToResearch(false)
+      }, 3000)
+    } else {
+      setError(true)
+      setTimeout(() => setError(false), 1800)
+    }
+  }, [name, email, whatsapp, countryCode, experience, featureRequest, willingToResearch])
+
+  const openModal = useCallback(() => {
+    setShowModal(true)
+    setDone(false)
+    setError(false)
+  }, [])
+
+  const closeModal = useCallback(() => {
+    setShowModal(false)
+    setDone(false)
+    setError(false)
+  }, [])
+
+  return (
+    <>
+      <section id="pricing" style={{ padding: 'var(--padding-y) 0', background: '#0a0d17' }}>
+        <div style={{ maxWidth: 'var(--max-width)', margin: '0 auto', padding: '0 var(--padding-x)' }}>
+          <Reveal>
+            <div style={{ textAlign: 'center', maxWidth: 560, margin: '0 auto 72px' }}>
+              <Eyebrow center>Pricing</Eyebrow>
+              <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(40px,5.5vw,72px)', fontWeight: 400, lineHeight: 0.96, letterSpacing: '0.04em', color: '#fff', marginBottom: 18 }}>
+                Simple pricing.<br />Coming soon.
+              </h2>
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, lineHeight: 1.8, color: 'rgba(255,255,255,0.44)', fontWeight: 300 }}>
+                Tiered access for every level of commitment. Join early — founding members get best rates.
+              </p>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.1}>
+            <div className={`responsive-grid-3`} style={{ gap: 20, alignItems: 'start' }}>
+              {PRICING_TIERS.map((t, i) => <PriceCard key={i} t={t} openModal={openModal} />)}
+            </div>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12.5, color: 'rgba(255,255,255,0.22)', textAlign: 'center', marginTop: 40, letterSpacing: '0.03em' }}>
+              Pricing finalised closer to public launch. Early access members get Exclusive Pricing.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Modal */}
+      <WaitlistModal
+        isOpen={showModal}
+        onClose={closeModal}
+        email={email}
+        setEmail={setEmail}
+        onSubmit={handleJoin}
+        done={done}
+        error={error}
+        name={name}
+        setName={setName}
+        whatsapp={whatsapp}
+        setWhatsapp={setWhatsapp}
+        countryCode={countryCode}
+        setCountryCode={setCountryCode}
+        experience={experience}
+        setExperience={setExperience}
+        featureRequest={featureRequest}
+        setFeatureRequest={setFeatureRequest}
+        willingToResearch={willingToResearch}
+        setWillingToResearch={setWillingToResearch}
+      />
+    </>
   )
 }
 
@@ -1563,6 +1649,500 @@ function FounderSection() {
   )
 }
 
+// ─── WAITLIST MODAL ────────────────────────────────────────────────────────────
+
+function WaitlistModal({ isOpen, onClose, email, setEmail, onSubmit, done, error, name, setName, whatsapp, setWhatsapp, countryCode, setCountryCode, experience, setExperience, featureRequest, setFeatureRequest, willingToResearch, setWillingToResearch }: {
+  isOpen: boolean
+  onClose: () => void
+  email: string
+  setEmail: (email: string) => void
+  onSubmit: () => void
+  done: boolean
+  error: boolean
+  name: string
+  setName: (name: string) => void
+  whatsapp: string
+  setWhatsapp: (whatsapp: string) => void
+  countryCode: string
+  setCountryCode: (countryCode: string) => void
+  experience: string
+  setExperience: (experience: string) => void
+  featureRequest: string
+  setFeatureRequest: (featureRequest: string) => void
+  willingToResearch: boolean
+  setWillingToResearch: (willingToResearch: boolean) => void
+}) {
+  const { isMobile } = useResponsive()
+  
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose()
+    }
+  }, [onClose])
+
+  if (!isOpen) return null
+
+  return (
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0,0,0,0.8)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: isMobile ? 20 : 40,
+        animation: 'fadeIn 0.3s ease-out'
+      }}
+      onClick={onClose}
+      onKeyDown={handleKeyDown}
+      tabIndex={-1}
+    >
+      <div 
+        style={{
+          background: 'linear-gradient(145deg, #111827, #0a0d17)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 24,
+          padding: isMobile ? 32 : 48,
+          maxWidth: isMobile ? '90vw' : 560,
+          width: '100%',
+          maxHeight: '90vh',
+          overflow: 'auto',
+          position: 'relative',
+          animation: 'slideUp 0.3s ease-out',
+          boxShadow: '0 40px 120px rgba(0,0,0,0.6), 0 0 60px rgba(37,89,244,0.1)'
+        }}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={handleKeyDown}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: 20,
+            right: 20,
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            color: 'rgba(255,255,255,0.6)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 18,
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+            e.currentTarget.style.color = '#fff'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+            e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
+          }}
+        >
+          ×
+        </button>
+
+        {/* Modal content */}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: 60,
+            height: 60,
+            borderRadius: 16,
+            background: 'rgba(37,89,244,0.12)',
+            border: '1px solid rgba(37,89,244,0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 24px',
+            fontSize: 24,
+            color: '#2559F4'
+          }}>
+            🎸
+          </div>
+          
+          <h3 style={{
+            fontFamily: "'Bebas Neue', sans-serif",
+            fontSize: isMobile ? 'clamp(28px,5vw,36px)' : 36,
+            fontWeight: 400,
+            lineHeight: 1.1,
+            letterSpacing: '0.04em',
+            color: '#fff',
+            marginBottom: 16
+          }}>
+            Join the Waitlist
+          </h3>
+          
+          <p style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: isMobile ? 14 : 16,
+            lineHeight: 1.6,
+            color: 'rgba(255,255,255,0.6)',
+            marginBottom: 32,
+            fontWeight: 300
+          }}>
+            Be the first to know when FretPractice launches. Get exclusive early access pricing.
+          </p>
+
+          {/* Form fields */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 24 }}>
+            {/* Name field */}
+            <div style={{ textAlign: 'left' }}>
+              <label style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13,
+                color: 'rgba(255,255,255,0.8)',
+                marginBottom: 8,
+                display: 'block',
+                fontWeight: 500
+              }}>
+                Name (Required)
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                disabled={done}
+                placeholder="Your name"
+                autoFocus
+                style={{
+                  width: '100%',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${error && !name ? 'rgba(239,68,68,0.55)' : 'rgba(255,255,255,0.14)'}`,
+                  borderRadius: 12,
+                  padding: '16px 20px',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 15,
+                  fontWeight: 300,
+                  color: '#fff',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  boxShadow: error && !name ? '0 0 0 4px rgba(239,68,68,0.1)' : 'none',
+                  transition: 'border-color 0.25s, box-shadow 0.25s'
+                }}
+              />
+            </div>
+
+            {/* Email field */}
+            <div style={{ textAlign: 'left' }}>
+              <label style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13,
+                color: 'rgba(255,255,255,0.8)',
+                marginBottom: 8,
+                display: 'block',
+                fontWeight: 500
+              }}>
+                Email Address (Required)
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                disabled={done}
+                placeholder="you@example.com"
+                style={{
+                  width: '100%',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${error && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? 'rgba(239,68,68,0.55)' : 'rgba(255,255,255,0.14)'}`,
+                  borderRadius: 12,
+                  padding: '16px 20px',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 15,
+                  fontWeight: 300,
+                  color: '#fff',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  boxShadow: error && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) ? '0 0 0 4px rgba(239,68,68,0.1)' : 'none',
+                  transition: 'border-color 0.25s, box-shadow 0.25s'
+                }}
+              />
+            </div>
+
+            {/* WhatsApp Number */}
+            <div style={{ textAlign: 'left' }}>
+              <label style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13,
+                color: 'rgba(255,255,255,0.8)',
+                marginBottom: 8,
+                display: 'block',
+                fontWeight: 500
+              }}>
+                WhatsApp Number (Optional)
+              </label>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <select
+                  value={countryCode}
+                  onChange={e => setCountryCode(e.target.value)}
+                  disabled={done}
+                  style={{
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.14)',
+                    borderRadius: 12,
+                    padding: '16px 12px',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 15,
+                    fontWeight: 300,
+                    color: '#fff',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    minWidth: 80
+                  }}
+                >
+                  <option value="+1">+1</option>
+                  <option value="+91">+91</option>
+                  <option value="+44">+44</option>
+                  <option value="+61">+61</option>
+                  <option value="+81">+81</option>
+                </select>
+                <input
+                  type="tel"
+                  value={whatsapp}
+                  onChange={e => setWhatsapp(e.target.value.replace(/\D/g, ''))}
+                  disabled={done}
+                  placeholder="e.g. 5551234567"
+                  style={{
+                    flex: 1,
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.14)',
+                    borderRadius: 12,
+                    padding: '16px 20px',
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 15,
+                    fontWeight: 300,
+                    color: '#fff',
+                    outline: 'none',
+                    cursor: 'pointer',
+                    transition: 'border-color 0.25s, box-shadow 0.25s'
+                  }}
+                />
+              </div>
+              <p style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 11,
+                color: 'rgba(255,255,255,0.4)',
+                marginTop: 6
+              }}>
+                Numbers only, without country code.
+              </p>
+            </div>
+
+            {/* Experience Level */}
+            <div style={{ textAlign: 'left' }}>
+              <label style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13,
+                color: 'rgba(255,255,255,0.8)',
+                marginBottom: 8,
+                display: 'block',
+                fontWeight: 500
+              }}>
+                How long are you playing guitar? (Optional)
+              </label>
+              <select
+                value={experience}
+                onChange={e => setExperience(e.target.value)}
+                disabled={done}
+                style={{
+                  width: '100%',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.14)',
+                  borderRadius: 12,
+                  padding: '16px 20px',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 15,
+                  fontWeight: 300,
+                  color: '#fff',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.25s, box-shadow 0.25s'
+                }}
+              >
+                <option value="">Select experience level</option>
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+                <option value="starting">Just starting</option>
+              </select>
+            </div>
+
+            {/* Feature Request */}
+            <div style={{ textAlign: 'left' }}>
+              <label style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13,
+                color: 'rgba(255,255,255,0.8)',
+                marginBottom: 8,
+                display: 'block',
+                fontWeight: 500
+              }}>
+                What feature would you like to see that other guitar tools don't provide?
+              </label>
+              <textarea
+                value={featureRequest}
+                onChange={e => setFeatureRequest(e.target.value)}
+                disabled={done}
+                placeholder="Tell us about a feature you wish existed..."
+                rows={3}
+                style={{
+                  width: '100%',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.14)',
+                  borderRadius: 12,
+                  padding: '16px 20px',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 15,
+                  fontWeight: 300,
+                  color: '#fff',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  resize: 'vertical',
+                  minHeight: 80,
+                  transition: 'border-color 0.25s, box-shadow 0.25s'
+                }}
+              />
+              <p style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 11,
+                color: 'rgba(255,255,255,0.4)',
+                marginTop: 6
+              }}>
+                Optional - Help us build what you need most.
+              </p>
+            </div>
+
+            {/* Research Checkbox */}
+            <div style={{ textAlign: 'left', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              <input
+                type="checkbox"
+                id="research"
+                checked={willingToResearch}
+                onChange={e => setWillingToResearch(e.target.checked)}
+                disabled={done}
+                style={{
+                  width: 18,
+                  height: 18,
+                  borderRadius: 4,
+                  background: willingToResearch ? 'rgba(37,89,244,0.2)' : 'rgba(255,255,255,0.05)',
+                  border: willingToResearch ? '1px solid rgba(37,89,244,0.4)' : '1px solid rgba(255,255,255,0.14)',
+                  cursor: 'pointer',
+                  marginTop: 2,
+                  accentColor: '#2559F4'
+                }}
+              />
+              <label htmlFor="research" style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13,
+                color: 'rgba(255,255,255,0.7)',
+                fontWeight: 300,
+                cursor: 'pointer',
+                margin: 0,
+                lineHeight: 1.4
+              }}>
+                Willing to participate in user research
+              </label>
+            </div>
+          </div>
+
+          {/* Submit button */}
+          <button
+            onClick={onSubmit}
+            disabled={done}
+            style={{
+              width: '100%',
+              marginBottom: 20,
+              background: 'linear-gradient(135deg, #2559F4, #7eb8ff)',
+              boxShadow: '0 4px 20px rgba(37,89,244,0.3)',
+              border: 'none',
+              borderRadius: 12,
+              padding: '16px 24px',
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 16,
+              fontWeight: 500,
+              color: '#fff',
+              cursor: done ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease',
+              opacity: done ? 0.6 : 1
+            }}
+          >
+            {done ? "You're on the list 🎸" : 'Join Waitlist'}
+          </button>
+
+          {/* Success message */}
+          {done && (
+            <div style={{
+              background: 'rgba(34,197,94,0.1)',
+              border: '1px solid rgba(34,197,94,0.2)',
+              borderRadius: 12,
+              padding: '16px 20px',
+              marginBottom: 20
+            }}>
+              <p style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 14,
+                color: '#22c55e',
+                fontWeight: 500,
+                margin: 0,
+                textAlign: 'center'
+              }}>
+                🎉 You're on the list! Check your email for confirmation.
+              </p>
+            </div>
+          )}
+
+          {/* Error message */}
+          {error && (
+            <p style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 13,
+              color: '#ef4444',
+              fontWeight: 400,
+              margin: '8px 0 0',
+              textAlign: 'center'
+            }}>
+              Please fill in all required fields (Name and Email)
+            </p>
+          )}
+
+          {/* Privacy note */}
+          <p style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 11.5,
+            color: 'rgba(255,255,255,0.3)',
+            marginTop: 24,
+            letterSpacing: '0.02em',
+            lineHeight: 1.5
+          }}>
+            We respect your privacy. Unsubscribe anytime. No spam, ever.
+          </p>
+        </div>
+      </div>
+
+      {/* Add animations to global styles */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(20px) scale(0.95); opacity: 0; }
+          to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
 // ─── WAITLIST ────────────────────────────────────────────────────────────────
 
 function WaitlistSection() {
@@ -1570,57 +2150,108 @@ function WaitlistSection() {
   const [email, setEmail] = useState('')
   const [done, setDone] = useState(false)
   const [error, setError] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [name, setName] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [countryCode, setCountryCode] = useState('+91')
+  const [experience, setExperience] = useState('')
+  const [featureRequest, setFeatureRequest] = useState('')
+  const [willingToResearch, setWillingToResearch] = useState(false)
 
   const handleJoin = useCallback(() => {
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    const isNameValid = name.trim().length > 0
+    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+    
+    if (isNameValid && isEmailValid) {
       setDone(true)
       setError(false)
+      // In real app, submit to backend here with all form data
+      const formData = {
+        name: name.trim(),
+        email: email.trim(),
+        whatsapp: whatsapp ? `${countryCode}${whatsapp}` : '',
+        experience,
+        featureRequest: featureRequest.trim(),
+        willingToResearch
+      }
+      console.log('Form submitted:', formData)
+      setTimeout(() => {
+        setDone(false)
+        setShowModal(false)
+        setName('')
+        setEmail('')
+        setWhatsapp('')
+        setCountryCode('+91')
+        setExperience('')
+        setFeatureRequest('')
+        setWillingToResearch(false)
+      }, 3000)
     } else {
       setError(true)
       setTimeout(() => setError(false), 1800)
     }
-  }, [email])
+  }, [name, email, whatsapp, countryCode, experience, featureRequest, willingToResearch])
+
+  const openModal = useCallback(() => {
+    setShowModal(true)
+    setDone(false)
+    setError(false)
+  }, [])
+
+  const closeModal = useCallback(() => {
+    setShowModal(false)
+    setDone(false)
+    setError(false)
+  }, [])
 
   return (
-    <section id="waitlist" style={{ padding: isMobile ? '120px 0' : '180px 0', textAlign: 'center', position: 'relative', overflow: 'hidden', background: '#000' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 55% at 50% 50%, rgba(37,89,244,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ maxWidth: 'var(--max-width)', margin: '0 auto', padding: '0 var(--padding-x)', position: 'relative', zIndex: 2 }}>
-        <Reveal>
-          <Eyebrow center>Early Access</Eyebrow>
-          <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(44px,7vw,96px)', fontWeight: 400, lineHeight: 0.92, letterSpacing: '0.04em', color: '#fff', marginBottom: 22 }}>
-            Start practicing<br />with intention.
-          </h2>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, color: 'rgba(255,255,255,0.44)', marginBottom: 52, fontWeight: 300 }}>
-            Join the waitlist. Get early access. Move forward.
-          </p>
+    <>
+      <section id="waitlist" style={{ padding: isMobile ? '120px 0' : '180px 0', textAlign: 'center', position: 'relative', overflow: 'hidden', background: '#000' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 55% at 50% 50%, rgba(37,89,244,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: 'var(--max-width)', margin: '0 auto', padding: '0 var(--padding-x)', position: 'relative', zIndex: 2 }}>
+          <Reveal>
+            <Eyebrow center>Early Access</Eyebrow>
+            <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(44px,7vw,96px)', fontWeight: 400, lineHeight: 0.92, letterSpacing: '0.04em', color: '#fff', marginBottom: 22 }}>
+              Start practicing<br />with intention.
+            </h2>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, color: 'rgba(255,255,255,0.44)', marginBottom: 52, fontWeight: 300 }}>
+              Join the waitlist. Get early access. Move forward.
+            </p>
 
-          <div style={{ display: 'flex', gap: 10, maxWidth: 430, margin: '0 auto' }}>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleJoin()}
-              disabled={done}
-              placeholder="your@email.com"
-              data-hover
-              style={{
-                flex: 1, background: 'rgba(255,255,255,0.05)',
-                border: `1px solid ${error ? 'rgba(239,68,68,0.55)' : 'rgba(255,255,255,0.14)'}`,
-                borderRadius: 10, padding: '14px 20px',
-                fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 300,
-                color: '#fff', outline: 'none', cursor: 'none',
-                boxShadow: error ? '0 0 0 4px rgba(239,68,68,0.1)' : 'none',
-                transition: 'border-color 0.25s, box-shadow 0.25s',
-              }}
-            />
-            <BtnBlue onClick={handleJoin}>{done ? "You're in ✓" : 'Join →'}</BtnBlue>
-          </div>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11.5, color: 'rgba(255,255,255,0.22)', marginTop: 16, letterSpacing: '0.03em' }}>
-             Get early access with founder pricing. No spam. Unsubscribe anytime.
-          </p>
-        </Reveal>
-      </div>
-    </section>
+            <BtnBlue onClick={openModal} style={{ maxWidth: 280, margin: '0 auto' }}>
+              Join Waitlist →
+            </BtnBlue>
+            
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11.5, color: 'rgba(255,255,255,0.22)', marginTop: 16, letterSpacing: '0.03em' }}>
+              Get early access with founder pricing. No spam. Unsubscribe anytime.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Modal */}
+      <WaitlistModal
+        isOpen={showModal}
+        onClose={closeModal}
+        email={email}
+        setEmail={setEmail}
+        onSubmit={handleJoin}
+        done={done}
+        error={error}
+        name={name}
+        setName={setName}
+        whatsapp={whatsapp}
+        setWhatsapp={setWhatsapp}
+        countryCode={countryCode}
+        setCountryCode={setCountryCode}
+        experience={experience}
+        setExperience={setExperience}
+        featureRequest={featureRequest}
+        setFeatureRequest={setFeatureRequest}
+        willingToResearch={willingToResearch}
+        setWillingToResearch={setWillingToResearch}
+      />
+    </>
   )
 }
 
